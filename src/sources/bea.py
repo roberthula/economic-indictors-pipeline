@@ -4,6 +4,9 @@ import pandas as pd
 import requests
 from dotenv import load_dotenv
 
+import json
+from pathlib import Path
+
 load_dotenv()
 
 BEA_API_KEY = os.getenv("BEA_API_KEY")
@@ -32,6 +35,16 @@ def fetch_bea_table(table_name, year, frequency="Q"):
     response.raise_for_status()
 
     data = response.json()
+
+    # Create the raw BEA folder.
+    raw_dir = Path(__file__).resolve().parents[2] / "data" / "raw" / "bea"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
+    # Identify the table, year, and frequency in the filename.
+    raw_path = raw_dir / f"{table_name}_{year}_{frequency}.json"
+
+    with raw_path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2)
 
     results = data["BEAAPI"]["Results"]
 

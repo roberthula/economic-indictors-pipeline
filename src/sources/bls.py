@@ -4,6 +4,9 @@ import requests
 import pandas as pd
 from dotenv import load_dotenv
 
+import json
+from pathlib import Path
+
 load_dotenv()
 
 BLS_API_KEY = os.getenv("BLS_API_KEY")
@@ -27,6 +30,16 @@ def fetch_bls_series(series_id, start_year, end_year):
     response.raise_for_status()
 
     data = response.json()
+
+    # Create the raw BLS folder.
+    raw_dir = Path(__file__).resolve().parents[2] / "data" / "raw" / "bls"
+    raw_dir.mkdir(parents=True, exist_ok=True)
+
+    # Include the series and requested years in the filename.
+    raw_path = raw_dir / f"{series_id}_{start_year}_{end_year}.json"
+
+    with raw_path.open("w", encoding="utf-8") as file:
+        json.dump(data, file, indent=2)
 
     if data.get("status") != "REQUEST_SUCCEEDED":
         raise ValueError(f"BLS API request failed: {data.get('message')}")
